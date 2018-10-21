@@ -93,7 +93,7 @@ System.out.println("1");
 			System.out.println("busqueda por id de proyecto: " + mgr.getProjectManager().getProjectByKey("77").getName());
 			
 			/* Mostrar relations */
-			IssueManager issueManager = mgr.getIssueManager();
+			IssueManager issueManager = mgr.getIssueManager(); 
 			Issue issue = issueManager.getIssueById(26681, Include.journals, Include.relations, Include.attachments, 
                     Include.changesets, Include.watchers );
 			
@@ -175,7 +175,22 @@ System.out.println("nº hijos: "+watchers.size());
 			    System.out.println(elemento.getCreatedOn() + " " + elemento.getUpdatedOn()
 			    		+ " " + elemento.getSpentOn());  
 			}	
-		
+		System.out.println("LAMBDA");
+			final Map<String, String> parametros = new HashMap<>();
+			final List<TimeEntry> elementos = timeEntryManager.getTimeEntries(parametros).getResults();
+			System.out.println("LAMBDA-1");			
+			for (TimeEntry el1 : elementos) {
+			    System.out.println(el1.toString());
+			}		
+			System.out.println("LAMBDA-1.1");
+			elementos.stream().filter(s -> s.getProjectId().toString().compareTo("35")==0)
+							  .filter(s -> s.getIssueId().toString().compareTo("51037")==0)
+				  			  .forEach(System.out::println);
+			System.out.println("LAMBDA-2");			
+			elementos.stream().map(s -> s.getProjectId())
+							.filter(s -> s.toString().compareTo("35")==0)	
+							.forEach(System.out::println);
+			
 		} catch (RedmineException e) {
 			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
 		}
