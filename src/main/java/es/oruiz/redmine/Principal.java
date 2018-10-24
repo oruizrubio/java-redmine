@@ -31,23 +31,11 @@ import com.taskadapter.redmineapi.bean.Watcher;
 import com.taskadapter.redmineapi.internal.ResultsWrapper;
 
 public class Principal {
+	
+	RedmineManager mgr;
 
 	public Principal() {
 		// TODO Auto-generated constructor stub
-	}
-
-	//https://github.com/taskadapter/redmine-java-api
-	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-		Principal p = new Principal();
-		
-		p.prueba();
-		
-	}
-
-	private void prueba() {
 		String uri = null; 
 		String apiAccessKey = null; 
 		
@@ -65,9 +53,27 @@ public class Principal {
 			e.printStackTrace();
 		}
 		
-System.out.println("1");
+		mgr = RedmineManagerFactory.createWithApiKey(uri, apiAccessKey);
+		mgr.setObjectsPerPage(100);
+	}
+
+	//https://github.com/taskadapter/redmine-java-api
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		Principal p = new Principal();
+		
+//		p.prueba();
+		
+//		p.lambda();
+		
+		p.issuesForProject();
+		
+	}
+
+	private void prueba() {
 		try {
-			RedmineManager mgr = RedmineManagerFactory.createWithApiKey(uri, apiAccessKey);
 			System.out.println("2");			
 			
 			/*  para filtrar las peticiones que se buscan
@@ -87,13 +93,13 @@ System.out.println("1");
 			/* mostrar proyectos */
 			List<Project> projects = mgr.getProjectManager().getProjects();		
 			for (Project project : projects) {
-			    System.out.println(project.toString()); 
+			    System.out.println(project.toString());  
 			}			
 			
 			System.out.println("busqueda por id de proyecto: " + mgr.getProjectManager().getProjectByKey("77").getName());
 			
 			/* Mostrar relations */
-			IssueManager issueManager = mgr.getIssueManager(); 
+			IssueManager issueManager = mgr.getIssueManager();
 			Issue issue = issueManager.getIssueById(26681, Include.journals, Include.relations, Include.attachments, 
                     Include.changesets, Include.watchers );
 			
@@ -175,7 +181,15 @@ System.out.println("nº hijos: "+watchers.size());
 			    System.out.println(elemento.getCreatedOn() + " " + elemento.getUpdatedOn()
 			    		+ " " + elemento.getSpentOn());  
 			}	
-		System.out.println("LAMBDA");
+		} catch (RedmineException e) {
+			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
+		}
+	}
+	
+	public void lambda () {
+		try {
+			TimeEntryManager timeEntryManager = mgr.getTimeEntryManager();			
+			System.out.println("LAMBDA");
 			final Map<String, String> parametros = new HashMap<>();
 			final List<TimeEntry> elementos = timeEntryManager.getTimeEntries(parametros).getResults();
 			System.out.println("LAMBDA-1");			
@@ -193,7 +207,51 @@ System.out.println("nº hijos: "+watchers.size());
 			
 		} catch (RedmineException e) {
 			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
-		}
+		}		
 	}
+	
+	public void issuesForProject() {
+		try {		
+			IssueManager issueManager = mgr.getIssueManager();
+			final Map<String, String> params = new HashMap<>();
+//			params.put("project_id", "475");  // personal
+			params.put("project_id", "35");  // giseiel
+			params.put("limit", "10");
+			params.put("offset", "0");
+			params.put("status_id", "*");
+			ResultsWrapper<Issue>lista = issueManager.getIssues(params);
+			List<Issue>isues = lista.getResults();
+			int contador = lista.getTotalFoundOnServer() / 10;
+
+			// creamos lista con todos los issues en el servidor
+			for (int j=0; j<=contador; j++) {
+				if (j!=0) {
+					params.replace("offset", Integer.toString(j*10));
+					lista = issueManager.getIssues(params);
+					isues.addAll(lista.getResults());
+				}				
+			}
+			
+			TimeEntryManager timeEntryManager = mgr.getTimeEntryManager();
+			final Map<String, String> params2 = new HashMap<>();
+			List<TimeEntry> elements = null;
+			params2.put("project_id", "35");
+			params2.put("issue_id", "1");
+			
+			for (Issue i : isues) {
+			    System.out.println(i.toString());
+				params2.replace("issue_id", i.getId().toString());
+				elements = timeEntryManager.getTimeEntries(params2).getResults();	
+				for (TimeEntry elemento : elements) {
+				    System.out.println(elemento.toString());
+				    System.out.println(elemento.getCreatedOn() + " " + elemento.getUpdatedOn()
+				    		+ " " + elemento.getSpentOn());  
+				}				    
+			}							
+		} catch (RedmineException e) {
+			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
+		}				
+	}
+	
 	
 }
