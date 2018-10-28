@@ -68,7 +68,10 @@ public class Principal {
 		
 //		p.lambda();
 		
-		p.issuesForProject();
+//		p.issuesForProject();
+
+		int peticion = 36863;
+		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestante(peticion));
 		
 	}
 
@@ -252,6 +255,65 @@ System.out.println("nº hijos: "+watchers.size());
 			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
 		}				
 	}
-	
-	
+
+	/*
+	 * Devuelve la diferencia entre el tiempo estimado y el restante de una petición
+	 * revisando todas las peticiones hijas abiertas
+	 */
+	public float issueTiempoRestante(Integer id) {
+		try {		
+			IssueManager issueManager = mgr.getIssueManager();
+			Issue issue = issueManager.getIssueById(id);
+			
+			final Map<String, String> params = new HashMap<>();
+			params.put("parent_id", Integer.toString(id));
+			params.put("limit", "10");
+			params.put("offset", "0");
+			ResultsWrapper<Issue>lista = issueManager.getIssues(params);
+			List<Issue>hijos = lista.getResults();
+			int contador = lista.getTotalFoundOnServer() / 10;
+
+			// creamos lista con todos los issues hijos en el servidor
+			for (int j=0; j<=contador; j++) {
+				if (j!=0) {
+					params.replace("offset", Integer.toString(j*10));
+					lista = issueManager.getIssues(params);
+					hijos.addAll(lista.getResults());
+				}				
+			}
+			
+			TimeEntryManager timeEntryManager = mgr.getTimeEntryManager();
+			final Map<String, String> params2 = new HashMap<>();
+			List<TimeEntry> elements = null;
+			params2.put("issue_id", id.toString());
+			float tiempoTrabajado = 0;
+			
+			// obtenemos tiempo trabajado y estimado de la propia petición
+			elements = timeEntryManager.getTimeEntries(params2).getResults();				
+			for (TimeEntry elemento : elements) {
+			    tiempoTrabajado += elemento.getHours().floatValue();
+			}				    			
+			float tiempoEstimadoRestante = (issue.getEstimatedHours()==null)?0:issue.getEstimatedHours();
+			
+			// buscamos tiempos en las peticiones hijas
+			for (Issue i : hijos) {
+//			    System.out.println(i.toString() + " " + i.getEstimatedHours() + " " + i.getSpentHours());
+			    tiempoEstimadoRestante += (i.getEstimatedHours()==null)?0:i.getEstimatedHours();			    
+				params2.replace("issue_id", i.getId().toString());
+				elements = timeEntryManager.getTimeEntries(params2).getResults();				
+				for (TimeEntry elemento : elements) {
+//				    System.out.println(elemento.toString());
+//				    System.out.println(elemento.getCreatedOn() + " " + elemento.getUpdatedOn()
+//				    		+ " " + elemento.getSpentOn());
+				    tiempoTrabajado += elemento.getHours().floatValue();
+				}				    
+			}						
+			
+//			System.out.println("Tiempo estimado: " + tiempoEstimadoRestante + " Tiempo trabajado: " + tiempoTrabajado );
+			return tiempoEstimadoRestante - tiempoTrabajado;
+		} catch (RedmineException e) {
+			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
+			return Float.parseFloat("0");
+		}					
+	}
 }
