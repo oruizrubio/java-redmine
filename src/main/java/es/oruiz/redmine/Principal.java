@@ -70,11 +70,26 @@ public class Principal {
 		
 //		p.issuesForProject();
 
-		int peticion = 36863;
+		int peticion = 43309;
 		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestante(peticion));
+		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestanteRecursivoGeneral(peticion));
 		
 	}
 
+	public float issueTiempoRestanteRecursivoGeneral (int id) {
+		
+		IssueManager issueManager = mgr.getIssueManager();
+		float tiempo = 0;
+		try {
+			Issue issue = issueManager.getIssueById(id);
+			
+			return issueTiempoTrabajadoRecursivo(issueManager, issue, tiempo);
+		} catch (RedmineException e) {
+			return Float.parseFloat("0");
+		}		
+		
+	}
+	
 	private void prueba() {
 		try {
 			System.out.println("2");			
@@ -316,4 +331,57 @@ System.out.println("nº hijos: "+watchers.size());
 			return Float.parseFloat("0");
 		}					
 	}
+	
+	/*
+	 * Devuelve la diferencia entre el tiempo estimado y el restante de una petición
+	 * revisando todas las peticiones hijas abiertas
+	 */
+	public float issueTiempoTrabajadoRecursivo(IssueManager pMgr, Issue pIssue, float pTiempo) {
+		try {		
+System.out.println(pIssue.toString() + " " + pTiempo); 			
+			final Map<String, String> params = new HashMap<>();
+			params.put("parent_id", pIssue.getId().toString());
+			params.put("limit", "10");
+			params.put("offset", "0");
+			ResultsWrapper<Issue>lista = pMgr.getIssues(params);
+			List<Issue>hijos = lista.getResults();
+			int contador = lista.getTotalFoundOnServer() / 10;
+			// creamos lista con todos los issues hijos en el servidor
+			for (int j=0; j<=contador; j++) {
+				if (j!=0) {
+					params.replace("offset", Integer.toString(j*10));
+					lista = pMgr.getIssues(params);
+					hijos.addAll(lista.getResults());
+				}				
+			}
+			
+			TimeEntryManager timeEntryManager = mgr.getTimeEntryManager();
+			final Map<String, String> params2 = new HashMap<>();
+			List<TimeEntry> elements = null;
+			params2.put("issue_id", pIssue.getId().toString());
+			float tiempoTrabajado = 0;
+			
+			// obtenemos tiempo trabajado y estimado de la propia petición
+			elements = timeEntryManager.getTimeEntries(params2).getResults();				
+			for (TimeEntry elemento : elements) {
+			    tiempoTrabajado += elemento.getHours().floatValue();
+			}				    			
+			float tiempoEstimadoRestante = (pIssue.getEstimatedHours()==null)?0:pIssue.getEstimatedHours();
+			System.out.println(tiempoTrabajado + " " + tiempoEstimadoRestante);			
+			if (hijos.isEmpty()) {				
+				return tiempoEstimadoRestante - tiempoTrabajado;
+			} else {
+				pTiempo += (tiempoEstimadoRestante - tiempoTrabajado);				
+				// buscamos tiempos en las peticiones hijas
+				for (Issue i : hijos) {
+					pTiempo += issueTiempoTrabajadoRecursivo(pMgr, i, pTiempo);
+				}						
+				
+				return pTiempo;
+			}
+		} catch (RedmineException e) {
+			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
+			return Float.parseFloat("0");
+		}					
+	}	
 }
