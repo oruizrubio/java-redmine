@@ -1,1 +1,4 @@
 config.properties
+target/*
+pom.xml
+*.class
