@@ -1,4 +1,4 @@
 config.properties
-target/*
+/target
 pom.xml
 *.class
