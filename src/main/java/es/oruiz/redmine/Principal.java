@@ -70,12 +70,52 @@ public class Principal {
 		
 //		p.issuesForProject();
 
-		int peticion = 43309;
-		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestante(peticion));
-		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestanteRecursivoGeneral(peticion));
+//		int peticion = 43309;
+//		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestante(peticion));
+//		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestanteRecursivoGeneral(peticion));
 		
+		p.liberaciones();
 	}
 
+	public void liberaciones () {
+//		proyecto MIA = 74
+		
+		try {		
+			System.out.println("liberaciones.");
+			IssueManager issueManager = mgr.getIssueManager();
+			final Map<String, String> params = new HashMap<>();
+//			params.put("project_id", "475");  // personal
+			params.put("project_id", "74");  // MIA
+			params.put("limit", "10");
+			params.put("offset", "0");
+			params.put("status_id", "*");
+//			params.put("subject", "*Liberación*");			
+			ResultsWrapper<Issue>lista = issueManager.getIssues(params);
+			List<Issue>isues = lista.getResults();
+			int contador = lista.getTotalFoundOnServer() / 10;
+
+			// creamos lista con todos los issues en el servidor
+			for (int j=0; j<=contador; j++) {
+				if (j!=0) {
+					params.replace("offset", Integer.toString(j*10));
+					lista = issueManager.getIssues(params);
+					isues.addAll(lista.getResults());
+				}				
+			}
+/*			
+			for (Issue is : isues) {
+			    System.out.println(is.toString());  
+			}
+*/			
+System.out.println("------------------------------- " + isues.size());			
+			isues.stream().filter(s -> (s.getSubject().contains("Liberación") || s.getSubject().contains("Liberacion")) && s.getSubject().contains("1.18.") )
+			  .forEach(System.out::println);			
+			
+		} catch (RedmineException e) {
+			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
+		}							
+	}
+	
 	public float issueTiempoRestanteRecursivoGeneral (int id) {
 		
 		IssueManager issueManager = mgr.getIssueManager();
