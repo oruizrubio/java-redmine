@@ -65,7 +65,7 @@ public class Principal {
 
 		Principal p = new Principal();
 		
-//		p.prueba();
+		p.prueba();
 		
 //		p.lambda();
 		
@@ -103,17 +103,25 @@ public class Principal {
 					isues.addAll(lista.getResults());
 				}				
 			}
-/*			
+			
+			// habría que recorrer cada issue, hacer un getissuebyid con include.journals y cargarlo
+			// todo en un hashmap <issue, getjournals>
 			for (Issue is : isues) {
-			    System.out.println(is.toString());  
+			    System.out.println(is.toString() + " " + is.getJournals().size());
+			    for (Journal jo : is.getJournals()) {
+//			    	if (jo.getNotes().contains("#incidenciaspostliberacion")) {
+			    		System.out.println(is.toString() + " - " + jo.toString());
+//			    	}
+			    }
 			}
-*/			
+			
 System.out.println("------------------------------- " + isues.size());			
 			isues.stream().filter(s -> (s.getSubject().contains("Liberación") || s.getSubject().contains("Liberacion")) && 
 								  s.getSubject().contains("1.18.") )
-//						  .filter(i -> i.getJournals().stream().anyMatch(j -> j.getNotes().contains("#incidenciaspos")))
+						  .filter(i -> i.getJournals().stream().anyMatch(j -> j.getNotes().contains("incidenciaspostliberacion")))
 						  .forEach(System.out::println);
 //						  .collect(Collecion.toList());
+			System.out.println("FIN liberaciones " );			
 		} catch (RedmineException e) {
 			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
 		}							
