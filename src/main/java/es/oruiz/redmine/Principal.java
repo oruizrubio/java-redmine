@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import javax.management.relation.Relation;
 
@@ -108,9 +109,11 @@ public class Principal {
 			}
 */			
 System.out.println("------------------------------- " + isues.size());			
-			isues.stream().filter(s -> (s.getSubject().contains("Liberación") || s.getSubject().contains("Liberacion")) && s.getSubject().contains("1.18.") )
-			  .forEach(System.out::println);			
-			
+			isues.stream().filter(s -> (s.getSubject().contains("Liberación") || s.getSubject().contains("Liberacion")) && 
+								  s.getSubject().contains("1.18.") )
+//						  .filter(i -> i.getJournals().stream().anyMatch(j -> j.getNotes().contains("#incidenciaspos")))
+						  .forEach(System.out::println);
+//						  .collect(Collecion.toList());
 		} catch (RedmineException e) {
 			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
 		}							
@@ -203,6 +206,14 @@ System.out.println("nº hijos: "+att.size());
 			while (a.hasNext()) {
 				System.out.println(a.next().toString());
 			}			
+System.out.println("journals");			
+			/* Mostrar subtareas */
+			Collection<Journal> journals =  issue.getJournals();			
+			Iterator<Journal> j = journals.iterator(); 
+System.out.println("nº hijos: "+journals.size());			
+			while (j.hasNext()) {
+				System.out.println(j.next().toString());
+			}						
 System.out.println("changesets");			
 			/* Mostrar subtareas */
 			Collection<Changeset> chsets =  issue.getChangesets();			
