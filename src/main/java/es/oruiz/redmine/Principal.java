@@ -3,6 +3,7 @@ package es.oruiz.redmine;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -65,7 +66,7 @@ public class Principal {
 
 		Principal p = new Principal();
 		
-		p.prueba();
+//		p.prueba();
 		
 //		p.lambda();
 		
@@ -75,7 +76,9 @@ public class Principal {
 //		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestante(peticion));
 //		System.out.println("Tiempo restante para la petición " + peticion + ": " + p.issueTiempoRestanteRecursivoGeneral(peticion));
 		
-		p.liberaciones();
+//		p.liberaciones();
+		
+		p.liberacionesConQuery();
 	}
 
 	public void liberaciones () {
@@ -126,6 +129,46 @@ System.out.println("------------------------------- " + isues.size());
 			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
 		}							
 	}
+	
+	public void liberacionesConQuery () {
+//		proyecto MIA = 74
+//		queryid = 1211
+		
+		try {		
+			System.out.println("liberacionesConQuery.");
+			IssueManager issueManager = mgr.getIssueManager();
+			List<Issue>lista = issueManager.getIssues("74", 1211, Include.journals);
+			
+			Collection<MiIssue> miLista = new ArrayList<MiIssue>();
+
+			for (Issue r: lista) {
+				MiIssue mio = new MiIssue(issueManager, r); 
+				miLista.add(mio);
+			}
+			// habría que recorrer cada issue, hacer un getissuebyid con include.journals y cargarlo
+			// todo en un hashmap <issue, getjournals>
+			for (MiIssue is : miLista) {
+			    System.out.println(is.getIs().toString() + " " + is.getListaJournals().size());
+			    for (Journal jo : is.getListaJournals()) {
+			    	try {
+				    	if (jo.getNotes().contains("#incidenciaspostliberacion")) {
+				    		System.out.println(is.getIs().toString()  + " - " + jo.toString() );
+				    	}
+			    	} catch (NullPointerException e) {
+			    		System.out.println(is.getIs().toString() + " no tiene incidencias");
+			    	}
+			    }
+			}
+			
+//System.out.println("------------------------------- " + miLista.size());			
+//			miLista.stream().filter(i -> i.getListaJournals().stream().anyMatch(j -> j.getNotes().contains("incidenciaspostliberacion")))
+//						  .forEach(System.out::println);
+//						  .collect(Collecion.toList());
+			System.out.println("FIN liberacionesConQuery " );			
+		} catch (RedmineException e) {
+			System.out.println("Se ha producido una RedmineExcepción."+ e.getMessage());
+		}							
+	}	
 	
 	public float issueTiempoRestanteRecursivoGeneral (int id) {
 		
