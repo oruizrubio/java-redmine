@@ -147,15 +147,17 @@ System.out.println("------------------------------- " + isues.size());
 			}
 			// habría que recorrer cada issue, hacer un getissuebyid con include.journals y cargarlo
 			// todo en un hashmap <issue, getjournals>
+			int i = 0;
 			for (MiIssue is : miLista) {
-			    System.out.println(is.getIs().toString() + " " + is.getListaJournals().size());
+//			    System.out.println(is.getIs().toString() + " " + is.getListaJournals().size());
 			    for (Journal jo : is.getListaJournals()) {
 			    	try {
 				    	if (jo.getNotes().contains("#incidenciaspostliberacion")) {
+				    		System.out.println(++i + " -----------------------------------------------");
 				    		System.out.println(is.getIs().toString()  + " - " + jo.toString() );
 				    	}
 			    	} catch (NullPointerException e) {
-			    		System.out.println(is.getIs().toString() + " no tiene incidencias");
+//			    		System.out.println(is.getIs().toString() + " no tiene incidencias");
 			    	}
 			    }
 			}
